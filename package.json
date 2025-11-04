@@ -1,0 +1,21 @@
+{
+  "name": "jira-ai-field-auto",
+  "version": "1.1.0",
+  "description": "MCP server for analyzing Jira Product Discovery tickets and auto-populating AI fields.",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.8",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "openai": "^4.47.0",
+    "p-limit": "^4.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
