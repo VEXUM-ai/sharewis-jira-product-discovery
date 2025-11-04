@@ -17,10 +17,6 @@ export const config = {
     email: getEnv('JIRA_EMAIL'),
     apiToken: getEnv('JIRA_API_TOKEN'),
   },
-  openai: {
-    apiKey: getEnv('OPENAI_API_KEY'),
-    model: getEnv('OPENAI_MODEL', 'gpt-4.1-mini'),
-  },
   analysis: {
     concurrency: Number(getEnv('ANALYSIS_CONCURRENCY', 5)),
     defaultStatus: getEnv('DEFAULT_STATUS_FILTER', '未着手'),
@@ -38,15 +34,8 @@ export const validateJiraConfig = () => {
   }
 };
 
-export const validateOpenAIConfig = () => {
-  if (!config.openai.apiKey) {
-    throw new Error('Missing required environment variable: OPENAI_API_KEY');
-  }
-};
-
 export const validateConfig = () => {
   validateJiraConfig();
-  validateOpenAIConfig();
 };
 
 export default config;
