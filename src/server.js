@@ -2,6 +2,7 @@ import express from 'express';
 import config from './config.js';
 import analyzeTicketsHandler from './routes/analyzeTickets.js';
 import updateFieldsHandler from './routes/updateFields.js';
+import { handleMCPToolsList, handleMCPToolCall } from './routes/mcpEndpoint.js';
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
@@ -10,6 +11,11 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// MCP endpoints
+app.get('/mcp/tools', handleMCPToolsList);
+app.post('/mcp/call', handleMCPToolCall);
+
+// Legacy HTTP endpoints
 app.post('/analyze_tickets', analyzeTicketsHandler);
 app.post('/update_fields', updateFieldsHandler);
 
