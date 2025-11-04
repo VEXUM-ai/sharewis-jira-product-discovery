@@ -19,7 +19,7 @@ export const config = {
   },
   openai: {
     apiKey: getEnv('OPENAI_API_KEY'),
-    model: getEnv('OPENAI_MODEL', 'gpt-4.1-mini'),
+    model: getEnv('OPENAI_MODEL', 'gpt-4o-mini'),
   },
   analysis: {
     concurrency: Number(getEnv('ANALYSIS_CONCURRENCY', 5)),

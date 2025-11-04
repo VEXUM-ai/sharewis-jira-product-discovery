@@ -31,7 +31,7 @@ A Node.js MCP server that analyzes Jira Product Discovery tickets with OpenAI an
 | `JIRA_EMAIL` | Jira account email used for API authentication. |
 | `JIRA_API_TOKEN` | Jira API token for the account above. |
 | `OPENAI_API_KEY` | OpenAI API key used for analysis. |
-| `OPENAI_MODEL` | Optional OpenAI model name (`gpt-4.1-mini` by default). |
+| `OPENAI_MODEL` | Optional OpenAI model name (`gpt-4o-mini` by default). |
 | `ANALYSIS_CONCURRENCY` | Optional concurrency limit for AI analysis (defaults to `5`). |
 | `DEFAULT_STATUS_FILTER` | Default status filter applied when none is provided (defaults to `未着手`). |
 

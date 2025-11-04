@@ -65,13 +65,13 @@ export const analyzeIssue = async (issue) => {
   const prompt = buildPrompt(issue);
   const client = getClient();
 
-  const response = await client.responses.create({
+  const response = await client.chat.completions.create({
     model: config.openai.model,
-    input: prompt,
+    messages: [{ role: "user", content: prompt }],
     temperature: 0.2,
   });
 
-  const text = response?.output?.[0]?.content?.[0]?.text ?? response?.output_text;
+  const text = response?.choices?.[0]?.message?.content;
   if (!text) {
     throw new Error('AI response did not include text output.');
   }
