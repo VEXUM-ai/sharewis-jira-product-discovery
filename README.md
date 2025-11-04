@@ -1,15 +1,17 @@
 # Jira Product Discovery AI自動フィールド設定サーバー
 
-Jira Product Discoveryのチケットを**ルールベースロジック**で分析し、AI接頭辞付きカスタムフィールドを自動生成するNode.js MCPサーバーです。
+Jira Product Discoveryのチケットを**ルールベースロジック**で分析し、AI接頭辞付きカスタムフィールドを自動生成する**MCPサーバー**です。
 
 ## 特徴
 
-- `POST /analyze_tickets` - プロジェクト内の全チケットを取得（Jiraページネーション使用）し、ルールベースアルゴリズムでAIスコア、カテゴリ、推奨事項を生成
-- `POST /update_fields` - `ai_`接頭辞付きフィールドをJiraに書き込み（単一またはバッチ処理、dry-runモード対応）
+- **MCPプロトコル対応** - Claude Desktop、Slackなどのクライアントから直接使用可能
+- **3つのMCPツール**を提供：
+  - `analyze_jira_tickets` - プロジェクト全体のチケット分析
+  - `update_jira_field` - 単一チケットのフィールド更新
+  - `batch_update_jira_fields` - 複数チケットのバッチ更新
+- **HTTP REST API**も利用可能（ExpressサーバーとしてHTTPリクエストにも対応）
 - **外部AI API不要** - votes、labels、status、dates、既存フィールドに基づくインテリジェントなルールベースロジック
 - 設定可能な並行処理数（デフォルト`5`）でスループットとAPI負荷のバランスを調整
-- フィールドマッピングJSONでAI出力とJiraカスタムフィールドキーを一元管理
-- `/health`エンドポイントで基本的な監視に対応
 
 ## 分析ロジック
 
@@ -26,15 +28,56 @@ Jira Product Discoveryのチケットを**ルールベースロジック**で分
 
 ## セットアップ
 
-1. **依存関係のインストール**
-   ```bash
-   npm install
-   ```
-2. **環境変数の設定**（`.env.example`を参照）
-3. **サーバーの起動**
-   ```bash
-   npm start
-   ```
+### 1. 依存関係のインストール
+```bash
+npm install
+```
+
+### 2. 環境変数の設定
+`.env.example`を参考に`.env`ファイルを作成し、必要な環境変数を設定してください。
+
+### 3. サーバーの起動
+
+#### MCPサーバーとして起動（推奨）
+```bash
+npm start
+```
+または
+```bash
+node src/mcp-server.js
+```
+
+MCPクライアント（Claude Desktopなど）から使用する場合、クライアントの設定ファイルに以下を追加してください：
+
+**Claude Desktopの場合** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+```json
+{
+  "mcpServers": {
+    "jira-ai-field-auto": {
+      "command": "node",
+      "args": ["/path/to/sharewis-jira-product-discovery/src/mcp-server.js"],
+      "env": {
+        "JIRA_BASE_URL": "https://your-domain.atlassian.net",
+        "JIRA_EMAIL": "your-email@example.com",
+        "JIRA_API_TOKEN": "your-api-token"
+      }
+    }
+  }
+}
+```
+
+**注意**: `/path/to/`は実際のプロジェクトパスに置き換えてください。
+
+#### HTTP REST APIサーバーとして起動
+```bash
+npm run start:http
+```
+または
+```bash
+node src/server.js
+```
+
+HTTPサーバーはポート3000で起動し、REST APIエンドポイントを提供します。
 
 ## 環境変数
 
@@ -49,7 +92,40 @@ Jira Product Discoveryのチケットを**ルールベースロジック**で分
 
 ## 使用例
 
-### チケット分析
+### MCPツールの使用（Claude Desktopなど）
+
+MCPクライアントから以下の3つのツールを使用できます：
+
+#### 1. `analyze_jira_tickets` - チケット分析
+
+```
+Jiraプロジェクト WD の未着手チケットを全件分析してください
+```
+
+MCPクライアントは自動的に以下のパラメータでツールを呼び出します：
+- `project_key`: "WD"
+- `status_filter`: "未着手"
+- `limit`: "unlimited"
+
+#### 2. `update_jira_field` - 単一チケット更新
+
+```
+WD-101チケットのai_impact_scoreを8、ai_priority_rankを14.4に更新してください
+```
+
+#### 3. `batch_update_jira_fields` - バッチ更新
+
+```
+以下のチケットを一括更新してください（dry-runモード）：
+- WD-101: ai_impact_score=8
+- WD-102: ai_impact_score=6
+```
+
+### HTTP REST API の使用
+
+MCPではなくHTTP APIとして使用する場合（`npm run start:http`で起動）：
+
+#### チケット分析
 
 ```bash
 curl -X POST http://localhost:3000/analyze_tickets \
