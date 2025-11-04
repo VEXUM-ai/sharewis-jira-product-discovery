@@ -3,6 +3,7 @@ import config from './config.js';
 import analyzeTicketsHandler from './routes/analyzeTickets.js';
 import updateFieldsHandler from './routes/updateFields.js';
 import { handleMCPToolsList, handleMCPToolCall } from './routes/mcpEndpoint.js';
+import { handleChatGPTMCP, handleChatGPTMCPSSE } from './routes/chatgptMcp.js';
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
@@ -11,7 +12,11 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// MCP endpoints
+// ChatGPT MCP endpoint (JSON-RPC over HTTP)
+app.get('/mcp', handleChatGPTMCPSSE);
+app.post('/mcp', handleChatGPTMCP);
+
+// MCP endpoints (alternative format)
 app.get('/mcp/tools', handleMCPToolsList);
 app.post('/mcp/call', handleMCPToolCall);
 
