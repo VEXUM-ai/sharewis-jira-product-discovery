@@ -5,10 +5,10 @@
   "type": "module",
   "main": "src/mcp-server.js",
   "scripts": {
-    "start": "node src/mcp-server.js",
-    "start:http": "node src/server.js",
-    "dev": "nodemon src/mcp-server.js",
-    "dev:http": "nodemon src/server.js"
+    "start": "node src/server.js",
+    "start:mcp": "node src/mcp-server.js",
+    "dev": "nodemon src/server.js",
+    "dev:mcp": "nodemon src/mcp-server.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.21.0",
