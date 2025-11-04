@@ -1,55 +1,55 @@
-# jira-ai-field-auto MCP Server
+# Jira Product Discovery AI自動フィールド設定サーバー
 
-A Node.js MCP server that analyzes Jira Product Discovery tickets using **rule-based logic** and automatically prepares AI-prefixed custom fields for Jira updates.
+Jira Product Discoveryのチケットを**ルールベースロジック**で分析し、AI接頭辞付きカスタムフィールドを自動生成するNode.js MCPサーバーです。
 
-## Features
+## 特徴
 
-- `POST /analyze_tickets` fetches every ticket in the target project (using Jira pagination) and generates AI scores, categories, and recommendations using rule-based algorithms.
-- `POST /update_fields` writes `ai_` fields back to Jira, either one issue at a time or in batches with optional dry-run mode.
-- **No external AI API required** - uses intelligent rule-based logic to analyze tickets based on votes, labels, status, dates, and existing fields.
-- Configurable concurrency limit (default `5`) to balance throughput and API load.
-- Central field mapping JSON keeps AI outputs aligned with Jira custom field keys.
-- Includes `/health` endpoint for basic monitoring.
+- `POST /analyze_tickets` - プロジェクト内の全チケットを取得（Jiraページネーション使用）し、ルールベースアルゴリズムでAIスコア、カテゴリ、推奨事項を生成
+- `POST /update_fields` - `ai_`接頭辞付きフィールドをJiraに書き込み（単一またはバッチ処理、dry-runモード対応）
+- **外部AI API不要** - votes、labels、status、dates、既存フィールドに基づくインテリジェントなルールベースロジック
+- 設定可能な並行処理数（デフォルト`5`）でスループットとAPI負荷のバランスを調整
+- フィールドマッピングJSONでAI出力とJiraカスタムフィールドキーを一元管理
+- `/health`エンドポイントで基本的な監視に対応
 
-## Analysis Logic
+## 分析ロジック
 
-The server uses rule-based algorithms to generate AI fields:
+サーバーはルールベースアルゴリズムを使用してAIフィールドを生成します：
 
-- **ai_impact_score** (1-10): Calculated from votes and existing impact field
-- **ai_effort_score** (1-10): Based on existing effort field, labels count, and description length
-- **ai_urgency_score** (1-10): Determined by update recency and creation date
-- **ai_priority_rank**: Computed as `(impact × urgency) / effort`
-- **ai_theme_category**: Classified from labels (e.g., "品質・安定性", "新機能開発", "UI/UX改善")
-- **ai_confidence_level**: "高/中/低" based on data richness (description, comments, labels)
-- **ai_suggested_next_action**: Recommendation based on current status
-- **ai_analysis_note**: Summary of key indicators and recommendations
+- **ai_impact_score** (1-10): votesと既存のimpactフィールドから算出
+- **ai_effort_score** (1-10): 既存のeffortフィールド、ラベル数、説明文の長さに基づく
+- **ai_urgency_score** (1-10): 更新日と作成日から判定
+- **ai_priority_rank**: `(impact × urgency) / effort`で計算
+- **ai_theme_category**: ラベルから分類（例: "品質・安定性"、"新機能開発"、"UI/UX改善"）
+- **ai_confidence_level**: データの充実度に基づく判定（"高"/"中"/"低"）
+- **ai_suggested_next_action**: 現在のステータスに基づく推奨アクション
+- **ai_analysis_note**: 主要指標と推奨事項のサマリー
 
-## Getting Started
+## セットアップ
 
-1. **Install dependencies**
+1. **依存関係のインストール**
    ```bash
    npm install
    ```
-2. **Set environment variables** (see `.env.example`)
-3. **Start the server**
+2. **環境変数の設定**（`.env.example`を参照）
+3. **サーバーの起動**
    ```bash
    npm start
    ```
 
-## Environment Variables
+## 環境変数
 
-| Variable | Description |
+| 変数名 | 説明 |
 | --- | --- |
-| `PORT` | Port for the Express server (defaults to `3000`). |
-| `JIRA_BASE_URL` | Base URL of the Jira instance (e.g., `https://your-domain.atlassian.net`). |
-| `JIRA_EMAIL` | Jira account email used for API authentication. |
-| `JIRA_API_TOKEN` | Jira API token for the account above. |
-| `ANALYSIS_CONCURRENCY` | Optional concurrency limit for analysis (defaults to `5`). |
-| `DEFAULT_STATUS_FILTER` | Default status filter applied when none is provided (defaults to `未着手`). |
+| `PORT` | Expressサーバーのポート番号（デフォルト: `3000`） |
+| `JIRA_BASE_URL` | JiraインスタンスのベースURL（例: `https://your-domain.atlassian.net`） |
+| `JIRA_EMAIL` | API認証に使用するJiraアカウントのメールアドレス |
+| `JIRA_API_TOKEN` | 上記アカウントのJira APIトークン |
+| `ANALYSIS_CONCURRENCY` | 分析の並行処理数（デフォルト: `5`） |
+| `DEFAULT_STATUS_FILTER` | 指定がない場合に適用されるデフォルトのステータスフィルター（デフォルト: `未着手`） |
 
-## Example Requests
+## 使用例
 
-### Analyze Tickets
+### チケット分析
 
 ```bash
 curl -X POST http://localhost:3000/analyze_tickets \
@@ -61,7 +61,7 @@ curl -X POST http://localhost:3000/analyze_tickets \
   }'
 ```
 
-Example response snippet:
+レスポンス例：
 
 ```json
 {
@@ -75,9 +75,9 @@ Example response snippet:
       "ai_fields": {
         "ai_impact_score": 8,
         "ai_priority_rank": 14.4,
-        "ai_theme_category": "安定性",
-        "ai_suggested_next_action": "セッション管理ミドルウェアの更新を検討",
-        "ai_analysis_note": "顧客影響度が高く、直近コメントでも複数の障害報告がある。",
+        "ai_theme_category": "品質・安定性",
+        "ai_suggested_next_action": "優先度が高いため、早急にレビューして着手を検討してください",
+        "ai_analysis_note": "8票の支持があり、ユーザーからの注目度が高い。高インパクト・高緊急度のため優先的な対応を推奨。",
         "ai_last_evaluated_at": "2024-05-18T01:23:45.678Z"
       }
     }
@@ -85,7 +85,7 @@ Example response snippet:
 }
 ```
 
-### Update Fields (batch)
+### フィールド更新（バッチ処理）
 
 ```bash
 curl -X POST http://localhost:3000/update_fields \
@@ -105,14 +105,18 @@ curl -X POST http://localhost:3000/update_fields \
   }'
 ```
 
-## Field Mapping
+## フィールドマッピング
 
-All AI-generated fields and the Jira references they rely on are defined in `config/field-mapping.json` for easy synchronization with Jira custom fields.
+すべてのAI生成フィールドと、それらが参照するJiraフィールドは`config/field-mapping.json`で定義されています。Jiraカスタムフィールドとの同期が容易です。
 
-## Notes
+## 注意事項
 
-- Only `ai_` prefixed fields will be updated via `/update_fields` to protect existing Jira data.
-- Analysis is performed entirely using rule-based logic - no external AI API calls or costs.
-- Analysis errors per issue are captured in the response, allowing for manual review or retries.
-- Use the `dry_run` flag when testing updates to preview changes without calling the Jira API.
-- The rule-based logic can be customized in `src/services/aiAnalyzer.js` to match your team's prioritization criteria.
+- `/update_fields`では`ai_`接頭辞付きフィールドのみが更新されます（既存のJiraデータを保護）
+- 分析は完全にルールベースロジックで実行されます - 外部AI APIコールなし、コストゼロ
+- チケットごとの分析エラーはレスポンスに含まれるため、手動レビューや再試行が可能
+- `dry_run`フラグを使用すると、Jira APIを呼び出さずに変更をプレビューできます
+- ルールベースロジックは`src/services/aiAnalyzer.js`でカスタマイズ可能（チームの優先順位付け基準に合わせて調整）
+
+## ライセンス
+
+このプロジェクトはMITライセンスの下で公開されています。
