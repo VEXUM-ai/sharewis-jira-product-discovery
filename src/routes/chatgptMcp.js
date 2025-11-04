@@ -126,6 +126,19 @@ async function handleToolCall(params) {
   const { name, arguments: args } = params;
 
   try {
+    // Validate Jira configuration before making any API calls
+    if (!config.jira.baseUrl || !config.jira.email || !config.jira.apiToken) {
+      const missing = [];
+      if (!config.jira.baseUrl) missing.push('JIRA_BASE_URL');
+      if (!config.jira.email) missing.push('JIRA_EMAIL');
+      if (!config.jira.apiToken) missing.push('JIRA_API_TOKEN');
+
+      throw new Error(
+        `Jira連携が正しく設定されていません。以下の環境変数が不足しています: ${missing.join(', ')}。` +
+        `Render.comのダッシュボードで環境変数を設定してください。`
+      );
+    }
+
     switch (name) {
       case 'analyze_jira_tickets': {
         const { project_key, status_filter, limit } = args;
@@ -297,11 +310,39 @@ async function handleToolCall(params) {
         throw new Error(`Unknown tool: ${name}`);
     }
   } catch (error) {
+    // Enhanced error handling with detailed information
+    let errorMessage = error.message;
+    let errorDetails = {};
+
+    // Check if it's an Axios error (Jira API error)
+    if (error.response) {
+      errorDetails = {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data,
+      };
+
+      if (error.response.status === 401) {
+        errorMessage = 'Jira認証に失敗しました。JIRA_API_TOKENが正しいか確認してください。';
+      } else if (error.response.status === 403) {
+        errorMessage = 'Jiraへのアクセスが拒否されました。権限を確認してください。';
+      } else if (error.response.status === 404) {
+        errorMessage = 'Jiraプロジェクトまたはリソースが見つかりません。JIRA_BASE_URLとproject_keyを確認してください。';
+      } else if (error.response.status === 410) {
+        errorMessage = 'Jira連携が無効になっています。APIトークンを再生成し、Render.comで環境変数を更新してください。';
+      } else {
+        errorMessage = `Jira APIエラー (${error.response.status}): ${error.message}`;
+      }
+    } else if (error.code === 'ENOTFOUND') {
+      errorMessage = 'Jiraサーバーに接続できません。JIRA_BASE_URLが正しいか確認してください。';
+    }
+
     return {
       jsonrpc: '2.0',
       error: {
         code: -32000,
-        message: error.message,
+        message: errorMessage,
+        data: Object.keys(errorDetails).length > 0 ? errorDetails : undefined,
       },
     };
   }

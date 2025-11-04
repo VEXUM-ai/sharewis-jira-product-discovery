@@ -34,7 +34,47 @@ npm install
 ```
 
 ### 2. 環境変数の設定
-`.env.example`を参考に`.env`ファイルを作成し、必要な環境変数を設定してください。
+
+#### 必須環境変数
+
+以下の環境変数を設定する必要があります：
+
+| 環境変数 | 説明 | 例 |
+|---------|------|-----|
+| `JIRA_BASE_URL` | JiraサイトのURL | `https://your-domain.atlassian.net` |
+| `JIRA_EMAIL` | Jiraアカウントのメールアドレス | `your-email@example.com` |
+| `JIRA_API_TOKEN` | Jira APIトークン | APIトークンを生成してください（後述） |
+| `PORT` | サーバーポート（オプション） | `3000`（デフォルト） |
+| `ANALYSIS_CONCURRENCY` | 並行処理数（オプション） | `5`（デフォルト） |
+| `DEFAULT_STATUS_FILTER` | デフォルトのステータスフィルター（オプション） | `未着手`（デフォルト） |
+
+#### Jira APIトークンの生成方法
+
+1. https://id.atlassian.com/manage-profile/security/api-tokens にアクセス
+2. 「APIトークンを作成」をクリック
+3. トークン名を入力（例: "Jira AI Field Auto"）
+4. 生成されたトークンをコピーして保存
+
+#### ローカル開発の場合
+
+`.env.example`を`.env`にコピーして、上記の環境変数を設定してください：
+
+```bash
+cp .env.example .env
+# .envファイルを編集して環境変数を設定
+```
+
+#### Render.comでのデプロイの場合
+
+1. Render.comダッシュボードでサービスを選択
+2. 左側メニューの「Environment」をクリック
+3. 「Add Environment Variable」で以下を追加：
+   - `JIRA_BASE_URL`
+   - `JIRA_EMAIL`
+   - `JIRA_API_TOKEN`
+4. 「Save Changes」をクリックしてサービスを再起動
+
+**重要:** 環境変数が正しく設定されていないと、HTTP 410エラーが発生します。
 
 ### 3. サーバーの起動
 
@@ -79,16 +119,18 @@ node src/server.js
 
 HTTPサーバーはポート3000で起動し、REST APIエンドポイントを提供します。
 
-## 環境変数
+#### ChatGPTカスタムMCPサーバーとして使用
 
-| 変数名 | 説明 |
-| --- | --- |
-| `PORT` | Expressサーバーのポート番号（デフォルト: `3000`） |
-| `JIRA_BASE_URL` | JiraインスタンスのベースURL（例: `https://your-domain.atlassian.net`） |
-| `JIRA_EMAIL` | API認証に使用するJiraアカウントのメールアドレス |
-| `JIRA_API_TOKEN` | 上記アカウントのJira APIトークン |
-| `ANALYSIS_CONCURRENCY` | 分析の並行処理数（デフォルト: `5`） |
-| `DEFAULT_STATUS_FILTER` | 指定がない場合に適用されるデフォルトのステータスフィルター（デフォルト: `未着手`） |
+1. Render.comにデプロイ後、ChatGPTの設定画面で以下を入力：
+   - **名前**: jira
+   - **説明**: Jira Product Discoveryチケットの分析と更新
+   - **MCP サーバーの URL**: `https://sharewis-jira-product-discovery.onrender.com/mcp`
+   - **認証**: 認証なし
+
+2. 設定完了後、ChatGPTから以下のように依頼できます：
+   ```
+   WDプロジェクトのチケットを分析して
+   ```
 
 ## 使用例
 
@@ -192,6 +234,57 @@ curl -X POST http://localhost:3000/update_fields \
 - チケットごとの分析エラーはレスポンスに含まれるため、手動レビューや再試行が可能
 - `dry_run`フラグを使用すると、Jira APIを呼び出さずに変更をプレビューできます
 - ルールベースロジックは`src/services/aiAnalyzer.js`でカスタマイズ可能（チームの優先順位付け基準に合わせて調整）
+
+## トラブルシューティング
+
+### HTTP 410エラー「Jira連携が無効になっています」
+
+このエラーは、Jira APIトークンが無効または失効している場合に発生します。
+
+**対処方法:**
+
+1. **新しいAPIトークンを生成**
+   - https://id.atlassian.com/manage-profile/security/api-tokens にアクセス
+   - 古いトークンを削除（必要に応じて）
+   - 「APIトークンを作成」をクリックして新しいトークンを生成
+
+2. **Render.comで環境変数を更新**
+   - Render.comダッシュボードでサービスを選択
+   - 「Environment」→「Edit」
+   - `JIRA_API_TOKEN`を新しい値に更新
+   - 「Save Changes」をクリック
+
+3. **サービスを再起動**
+   - Render.comが自動的にサービスを再起動します
+   - デプロイ完了後、ChatGPTから再度試してください
+
+### HTTP 401エラー「Jira認証に失敗しました」
+
+**原因:** APIトークンまたはメールアドレスが間違っています。
+
+**対処方法:**
+- `JIRA_EMAIL`がJiraアカウントの正しいメールアドレスであることを確認
+- `JIRA_API_TOKEN`が正しくコピーされていることを確認
+- Render.comで環境変数を修正して再起動
+
+### HTTP 404エラー「Jiraプロジェクトまたはリソースが見つかりません」
+
+**原因:** プロジェクトキーまたはJIRA_BASE_URLが間違っています。
+
+**対処方法:**
+- プロジェクトキー（例: "WD"）が正しいことを確認
+- `JIRA_BASE_URL`が正しいフォーマットであることを確認（例: `https://your-domain.atlassian.net`）
+- 末尾にスラッシュ（/）を含めないでください
+
+### 「環境変数が不足しています」エラー
+
+**原因:** 必須の環境変数が設定されていません。
+
+**対処方法:**
+- Render.comで以下の環境変数がすべて設定されていることを確認：
+  - `JIRA_BASE_URL`
+  - `JIRA_EMAIL`
+  - `JIRA_API_TOKEN`
 
 ## ライセンス
 
