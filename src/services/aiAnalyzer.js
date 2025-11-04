@@ -1,9 +1,12 @@
 import OpenAI from 'openai';
+import { createRequire } from 'module';
 import config, { isOpenAIEnabled, validateOpenAIConfig } from '../config.js';
 import { extractJson } from '../utils/json.js';
 import { adfToText, extractCommentBody } from '../utils/jira.js';
 import { analyzeIssueRuleBased } from './ruleBasedAnalyzer.js';
-import fieldMapping from '../../config/field-mapping.json' with { type: 'json' };
+
+const require = createRequire(import.meta.url);
+const fieldMapping = require('../../config/field-mapping.json');
 
 let cachedClient;
 
