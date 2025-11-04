@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import config, { validateOpenAIConfig } from '../config.js';
-import fieldMapping from '../../config/field-mapping.json' assert { type: 'json' };
+import fieldMapping from '../../config/field-mapping.json' with { type: 'json' };
 import { extractJson } from '../utils/json.js';
 import { adfToText, extractCommentBody } from '../utils/jira.js';
 
