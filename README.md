@@ -1,14 +1,28 @@
 # jira-ai-field-auto MCP Server
 
-A Node.js MCP server that analyzes Jira Product Discovery tickets with OpenAI and automatically prepares AI-prefixed custom fields for Jira updates.
+A Node.js MCP server that analyzes Jira Product Discovery tickets using **rule-based logic** and automatically prepares AI-prefixed custom fields for Jira updates.
 
 ## Features
 
-- `POST /analyze_tickets` fetches every ticket in the target project (using Jira pagination) and generates AI scores, categories, and recommendations.
+- `POST /analyze_tickets` fetches every ticket in the target project (using Jira pagination) and generates AI scores, categories, and recommendations using rule-based algorithms.
 - `POST /update_fields` writes `ai_` fields back to Jira, either one issue at a time or in batches with optional dry-run mode.
+- **No external AI API required** - uses intelligent rule-based logic to analyze tickets based on votes, labels, status, dates, and existing fields.
 - Configurable concurrency limit (default `5`) to balance throughput and API load.
 - Central field mapping JSON keeps AI outputs aligned with Jira custom field keys.
 - Includes `/health` endpoint for basic monitoring.
+
+## Analysis Logic
+
+The server uses rule-based algorithms to generate AI fields:
+
+- **ai_impact_score** (1-10): Calculated from votes and existing impact field
+- **ai_effort_score** (1-10): Based on existing effort field, labels count, and description length
+- **ai_urgency_score** (1-10): Determined by update recency and creation date
+- **ai_priority_rank**: Computed as `(impact × urgency) / effort`
+- **ai_theme_category**: Classified from labels (e.g., "品質・安定性", "新機能開発", "UI/UX改善")
+- **ai_confidence_level**: "高/中/低" based on data richness (description, comments, labels)
+- **ai_suggested_next_action**: Recommendation based on current status
+- **ai_analysis_note**: Summary of key indicators and recommendations
 
 ## Getting Started
 
@@ -30,9 +44,7 @@ A Node.js MCP server that analyzes Jira Product Discovery tickets with OpenAI an
 | `JIRA_BASE_URL` | Base URL of the Jira instance (e.g., `https://your-domain.atlassian.net`). |
 | `JIRA_EMAIL` | Jira account email used for API authentication. |
 | `JIRA_API_TOKEN` | Jira API token for the account above. |
-| `OPENAI_API_KEY` | OpenAI API key used for analysis. |
-| `OPENAI_MODEL` | Optional OpenAI model name (`gpt-4o-mini` by default). |
-| `ANALYSIS_CONCURRENCY` | Optional concurrency limit for AI analysis (defaults to `5`). |
+| `ANALYSIS_CONCURRENCY` | Optional concurrency limit for analysis (defaults to `5`). |
 | `DEFAULT_STATUS_FILTER` | Default status filter applied when none is provided (defaults to `未着手`). |
 
 ## Example Requests
@@ -100,5 +112,7 @@ All AI-generated fields and the Jira references they rely on are defined in `con
 ## Notes
 
 - Only `ai_` prefixed fields will be updated via `/update_fields` to protect existing Jira data.
-- AI analysis errors per issue are captured in the response, allowing for manual review or retries.
+- Analysis is performed entirely using rule-based logic - no external AI API calls or costs.
+- Analysis errors per issue are captured in the response, allowing for manual review or retries.
 - Use the `dry_run` flag when testing updates to preview changes without calling the Jira API.
+- The rule-based logic can be customized in `src/services/aiAnalyzer.js` to match your team's prioritization criteria.
