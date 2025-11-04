@@ -1,34 +1,11 @@
-name: jira-ai-field-auto
-version: 1.1.0
-description: >
-  Jira Product Discovery全チケットをAIで解析し、
-  優先順位や推奨アクションなどのフィールドを自動設定するMCPサーバー。
-endpoints:
-  /analyze_tickets:
-    method: POST
-    description: 全チケットを解析しAIフィールドを生成
-    params:
-      project_key: string
-      status_filter: string
-      limit:
-        type: string
-        default: "unlimited"
-        description: 無制限で全件取得
-  /update_fields:
-    method: POST
-    description: AIフィールドをJiraに反映
-    params:
-      issue_id: string
-      fields: object
-      batch: boolean
-      dry_run: boolean
-permissions:
-  - read:jira.issues
-  - write:jira.issues.fields
-  - read:jira.projects
-restrictions:
-  field_prefix: "ai_"
-notes:
-  pagination: true
-  maxResults: 100 per request
-  continue_until: isLast=false
+mcpServers:
+  jira-ai-field-auto:
+    command: node
+    args:
+      - src/mcp-server.js
+    env:
+      JIRA_BASE_URL: ${JIRA_BASE_URL}
+      JIRA_EMAIL: ${JIRA_EMAIL}
+      JIRA_API_TOKEN: ${JIRA_API_TOKEN}
+      ANALYSIS_CONCURRENCY: "5"
+      DEFAULT_STATUS_FILTER: "未着手"
