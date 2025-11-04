@@ -1,16 +1,9 @@
 import OpenAI from 'openai';
-import { readFileSync } from 'fs';
-import { dirname, resolve } from 'path';
-import { fileURLToPath } from 'url';
 import config, { isOpenAIEnabled, validateOpenAIConfig } from '../config.js';
 import { extractJson } from '../utils/json.js';
 import { adfToText, extractCommentBody } from '../utils/jira.js';
 import { analyzeIssueRuleBased } from './ruleBasedAnalyzer.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const fieldMappingPath = resolve(__dirname, '../../config/field-mapping.json');
-const fieldMapping = JSON.parse(readFileSync(fieldMappingPath, 'utf-8'));
+import fieldMapping from '../../config/field-mapping.json' with { type: 'json' };
 
 let cachedClient;
 
